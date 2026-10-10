@@ -70,6 +70,7 @@ Tipp: Auf manchen Android-Handys (ohne installierte DHL-App) landet der Browser 
 Wird die Sitzung von DHL irgendwann abgelehnt, fragt Home Assistant nach einer **erneuten Anmeldung** (gleiches Vorgehen). Ist DHL nur kurz nicht erreichbar, bleiben die bekannten Sendungen erhalten.
 
 - Der Eintrag ist unabhängig von „Sendungsnummern“. Steht dieselbe Sendung dort **und** im DHL-Konto, gibt es zwei Sensoren – dann die Nummer im Eintrag „Sendungsnummern“ entfernen.
+- **Retouren** („Rücksendung an den Absender“) werden vom DHL-Konto gar nicht erst angelegt.
 - Der Diagnose-Sensor **„DHL-Konto Erkennung“** zeigt das Ergebnis der letzten Abfrage (`N Sendung(en) erkannt` oder eine Fehlermeldung).
 - Der frühere Schalter beim Eintrag „Sendungsnummern“ (Zahnrad-Menü) ist entfernt; die DHL-Verbindung läuft nur noch über den eigenen Eintrag „DHL-Konto“. Ein noch aktiver Altschalter läuft bis zum nächsten Speichern der Optionen weiter und wird dann abgeschaltet – danach den Eintrag „DHL-Konto“ anlegen.
 

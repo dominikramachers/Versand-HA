@@ -202,7 +202,7 @@ class DhlAccountClient:
             ) from err
 
     async def fetch_shipment_ids(self, dhl_session: dict[str, Any]) -> list[str]:
-        """Non-archived shipment IDs (piececodes) linked to the account."""
+        """Non-archived, non-return shipment IDs (piececodes) of the account."""
         id_token = dhl_session.get("id_token")
         if not id_token:
             raise DhlAuthError("DHL-Sitzung ohne ID-Token - bitte neu anmelden.")
@@ -235,6 +235,11 @@ class DhlAccountClient:
         for shipment in (payload or {}).get("sendungen", []) or []:
             info = shipment.get("sendungsinfo") or {}
             if info.get("sendungsliste") == "ARCHIVIERT":
+                continue
+            details = shipment.get("sendungsdetails") or {}
+            if details.get("ruecksendung") is True or details.get("retoure") is True:
+                # Returns ("Rücksendung an den Absender") never arrive at your
+                # door, so they are not tracked at all.
                 continue
             shipment_id = shipment.get("id")
             if shipment_id and shipment_id not in ids:

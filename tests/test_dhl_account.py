@@ -143,6 +143,16 @@ SEARCH = {
         {"id": "00340434222222222222", "sendungsinfo": {}},
         {"id": "00340434333333333333", "sendungsinfo": {"sendungsliste": "ARCHIVIERT"}},
         {"id": "00340434111111111111"},
+        {
+            "id": "00340434444444444444",
+            "sendungsinfo": {"sendungsliste": "AKTUELL"},
+            "sendungsdetails": {"ruecksendung": True},
+        },
+        {
+            "id": "00340434555555555555",
+            "sendungsinfo": {"sendungsliste": "AKTUELL"},
+            "sendungsdetails": {"retoure": True},
+        },
         {"nothing": True},
     ]
 }
