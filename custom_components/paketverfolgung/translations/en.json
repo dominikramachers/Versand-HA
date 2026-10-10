@@ -48,7 +48,7 @@
         }
       },
       "dhl_account": {
-        "title": "Sign in with a DHL account",
+        "title": "Sign in with a DHL account (Experimental)",
         "description": "All shipments on your DHL account are then discovered automatically. No password is stored, only DHL's sign-in session.\n\n1. Open the developer tools (**F12**) in a new browser tab and switch to the **Console** tab (easiest in Chrome, Edge or Firefox). If the console clears during the redirect, enable \"Preserve log\".\n2. In **that** tab, open the following link and sign in with your DHL account:\n\n{login_url}\n\n3. The page then appears to show nothing - that is expected. A message containing an address that starts with `dhllogin://` now shows up in the **Console** (it is not in the address bar). Copy the address or the whole line and paste it below.\n\nThe address is only valid briefly and only once. If it fails, open the link again.",
         "data": {
           "dhl_redirect": "Address from the console (dhllogin://…)"
@@ -83,7 +83,7 @@
     "provider": {
       "options": {
         "dhl": "Tracking numbers (DHL, DPD, Hermes & UPS)",
-        "dhl_account": "DHL account (all shipments automatically)",
+        "dhl_account": "DHL account (all shipments automatically) (Experimental)",
         "dpd": "DPD account (all parcels automatically)",
         "amazon": "Amazon.de account (deliveries automatically)",
         "hermes": "Hermes account (all parcels automatically)"
@@ -97,15 +97,7 @@
         "data": {
           "tracking_numbers": "Tracking numbers (DHL, DPD, Hermes or UPS)",
           "default_postcode": "Your postcode (only needed if a DPD number is protected)",
-          "update_interval_minutes": "Update interval (minutes)",
-          "dhl_auto_discovery": "Connect a DHL account and auto-discover its shipments"
-        }
-      },
-      "dhl_login": {
-        "title": "Connect a DHL account",
-        "description": "{known}1. Open the developer tools (**F12**) in a new browser tab and switch to the **Console** tab.\n2. In **that** tab, open the following link and sign in with your DHL account:\n\n{login_url}\n\n3. The page then appears to show nothing - that is expected. A message containing an address that starts with `dhllogin://` shows up in the **Console** (not in the address bar). Copy the address or the whole line and paste it below.",
-        "data": {
-          "dhl_redirect": "Address from the console (dhllogin://…)"
+          "update_interval_minutes": "Update interval (minutes)"
         }
       },
       "dpd_options": {

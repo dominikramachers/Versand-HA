@@ -48,7 +48,7 @@
         }
       },
       "dhl_account": {
-        "title": "Mit DHL-Konto anmelden",
+        "title": "Mit DHL-Konto anmelden (Experimentell)",
         "description": "Alle Sendungen deines DHL-Kontos werden danach automatisch erkannt. Es wird kein Passwort gespeichert, nur die Anmelde-Sitzung von DHL.\n\n1. Öffne in einem neuen Browser-Tab die Entwicklerwerkzeuge (**F12**) und wechsle auf den Reiter **Konsole** (am einfachsten in Chrome, Edge oder Firefox). Falls sich die Konsole beim Weiterleiten leert, setze „Protokoll beibehalten“ (Preserve log).\n2. Öffne in **diesem** Tab den folgenden Link und melde dich mit deinem DHL-Konto an:\n\n{login_url}\n\n3. Danach zeigt die Seite scheinbar nichts an – das ist normal. In der **Konsole** erscheint jetzt eine Meldung mit einer Adresse, die mit `dhllogin://` beginnt (sie steht nicht in der Adresszeile). Kopiere die Adresse oder die ganze Zeile und füge sie unten ein.\n\nDie Adresse gilt nur kurz und nur einmal. Bei einem Fehler den Link erneut öffnen.",
         "data": {
           "dhl_redirect": "Adresse aus der Konsole (dhllogin://…)"
@@ -83,7 +83,7 @@
     "provider": {
       "options": {
         "dhl": "Sendungsnummern (DHL, DPD, Hermes & UPS)",
-        "dhl_account": "DHL-Konto (alle Sendungen automatisch)",
+        "dhl_account": "DHL-Konto (alle Sendungen automatisch) (Experimentell)",
         "dpd": "DPD-Konto (alle Sendungen automatisch)",
         "amazon": "Amazon.de-Konto (Lieferungen automatisch)",
         "hermes": "Hermes-Konto (alle Sendungen automatisch)"
@@ -97,15 +97,7 @@
         "data": {
           "tracking_numbers": "Sendungsnummern (DHL, DPD, Hermes oder UPS)",
           "default_postcode": "Deine PLZ (nur nötig, falls eine DPD-Nummer geschützt ist)",
-          "update_interval_minutes": "Aktualisierungsintervall (Minuten)",
-          "dhl_auto_discovery": "DHL-Konto verbinden und Sendungen automatisch erkennen"
-        }
-      },
-      "dhl_login": {
-        "title": "DHL-Konto verbinden",
-        "description": "{known}1. Öffne in einem neuen Browser-Tab die Entwicklerwerkzeuge (**F12**) und wechsle auf den Reiter **Konsole**.\n2. Öffne in **diesem** Tab den folgenden Link und melde dich mit deinem DHL-Konto an:\n\n{login_url}\n\n3. Danach zeigt die Seite scheinbar nichts an – das ist normal. In der **Konsole** erscheint eine Meldung mit einer Adresse, die mit `dhllogin://` beginnt (nicht in der Adresszeile). Kopiere die Adresse oder die ganze Zeile und füge sie unten ein.",
-        "data": {
-          "dhl_redirect": "Adresse aus der Konsole (dhllogin://…)"
+          "update_interval_minutes": "Aktualisierungsintervall (Minuten)"
         }
       },
       "dpd_options": {
