@@ -7,7 +7,7 @@ Zeigt den Status deiner Paketsendungen als Sensoren und als eigene Seitenleisten
 
 - **Sendungsnummern** – du trägst Nummern ein, der Anbieter (**DHL**, **DPD**, **Hermes** oder **UPS**) wird pro Nummer automatisch erkannt.
 - **DPD-Konto** – Login mit deinem myDPD-Konto, alle Sendungen werden automatisch erkannt.
-- **DHL-Konto** (optional) – Login mit deinem DHL-Konto, die Sendungen des Kontos werden automatisch mitgeführt.
+- **DHL-Konto** (optional) – eigener Eintrag „DHL-Konto“: Login mit deinem DHL-Konto, alle Sendungen des Kontos werden automatisch erkannt.
 - **Hermes-Konto** (optional) – Login mit deinem myHermes-Konto, alle an dich unterwegs befindlichen Sendungen („Empfangsübersicht“) werden automatisch erkannt.
 - **Amazon.de-Konto** (optional) – Login mit deinem Amazon-Konto, laufende Lieferungen werden automatisch erkannt (inkl. tatsächlichem Zusteller). ⚠️ Sicherheitshinweis unten beachten.
 
@@ -53,18 +53,25 @@ Meldet sich mit deinem **myDPD-Konto** an (SOAP-API der offiziellen DPD-App „P
 
 Das Passwort wird nur lokal in Home Assistant gespeichert (wie bei jeder anderen Cloud-Integration).
 
-## DHL-Konto verbinden (optional)
+## DHL-Konto (optional)
 
-Beim Eintrag „Sendungsnummern“ gibt es im Zahnrad-Menü den Haken **„DHL-Konto verbinden und Sendungen automatisch erkennen“**. Ist er gesetzt, öffnet sich ein Schritt mit einem **DHL-Login-Link**:
+„Eintrag hinzufügen“ → **„DHL-Konto“**. Danach erscheinen alle **nicht archivierten Sendungen deines DHL-Kontos** automatisch als Sensoren (Verlauf, Zustellfenster usw. wie bei einer eingetragenen DHL-Nummer). Ein Eintrag pro Konto, Aktualisierungsintervall in den Optionen. Es wird **kein Passwort** gespeichert, nur die OAuth-Sitzung von DHL; sie wird selbstständig erneuert.
 
-1. Link im Browser öffnen, mit dem DHL-Konto anmelden.
-2. DHL leitet danach auf eine Adresse weiter, die mit `dhllogin://` beginnt – die Seite bleibt scheinbar leer. Die komplette Adresse aus der Adresszeile kopieren (oder mit `Strg+U` im Quelltext nach `dhllogin://` suchen) und in das Feld einfügen.
+Die Anmeldung läuft über den Login der DHL-App und hat einen Haken: Nach dem Anmelden zeigt DHL die Weiterleitungsadresse `dhllogin://…` **nicht** im Browser an – sie taucht nur in der **Konsole der Entwicklerwerkzeuge** auf. So gehst du vor:
 
-Danach werden bei jeder Aktualisierung die **nicht archivierten Sendungen des Kontos** automatisch mit in die Liste aufgenommen (Anbieter = DHL). Es wird **kein Passwort** gespeichert, nur das OAuth-Sitzungs-Token; es wird selbstständig erneuert.
+1. In einem neuen Browser-Tab die Entwicklerwerkzeuge mit **F12** öffnen und auf den Reiter **Konsole** wechseln (am einfachsten in Chrome, Edge oder Firefox). Leert sich die Konsole beim Weiterleiten, „Protokoll beibehalten“ (*Preserve log*) einschalten.
+2. In **demselben Tab** den Login-Link aus Home Assistant öffnen und mit dem DHL-Konto anmelden.
+3. Die Seite bleibt danach scheinbar leer. In der Konsole erscheint eine Meldung mit einer Adresse, die mit `dhllogin://` beginnt. Diese Adresse – oder einfach die ganze Zeile – kopieren und in das Feld in Home Assistant einfügen. Die Adresse gilt nur kurz und nur einmal; bei einem Fehler den Link erneut öffnen.
 
-Der Diagnose-Sensor **„DHL-Konto Erkennung“** (`sensor.dhl_konto_erkennung`) zeigt das Ergebnis der letzten Abfrage (`Aus`, `N Sendung(en) erkannt` oder eine Fehlermeldung).
+Tipp: Auf manchen Android-Handys (ohne installierte DHL-App) landet der Browser nach der Anmeldung auf einer Fehlerseite, auf der die `dhllogin://…`-Adresse in der Adresszeile steht. Dann reicht es, sie von dort zu kopieren, ganz ohne Entwicklerwerkzeuge.
 
-> ℹ️ Die Login-Parameter stammen aus der DHL-App und sind inoffiziell – ändert DHL sie, muss die Anmeldung ggf. neu erfolgen oder die Funktion bricht. Deshalb standardmäßig **aus**.
+Wird die Sitzung von DHL irgendwann abgelehnt, fragt Home Assistant nach einer **erneuten Anmeldung** (gleiches Vorgehen). Ist DHL nur kurz nicht erreichbar, bleiben die bekannten Sendungen erhalten.
+
+- Der Eintrag ist unabhängig von „Sendungsnummern“. Steht dieselbe Sendung dort **und** im DHL-Konto, gibt es zwei Sensoren – dann die Nummer im Eintrag „Sendungsnummern“ entfernen.
+- Der Diagnose-Sensor **„DHL-Konto Erkennung“** zeigt das Ergebnis der letzten Abfrage (`N Sendung(en) erkannt` oder eine Fehlermeldung).
+- Älterer Weg: Beim Eintrag „Sendungsnummern“ gibt es im Zahnrad-Menü weiterhin den Haken **„DHL-Konto verbinden und Sendungen automatisch erkennen“** (gleicher Login, gleiche Konsolen-Anleitung). Bestehende Einrichtungen laufen unverändert weiter; für neue ist der eigene Eintrag „DHL-Konto“ gedacht.
+
+> ℹ️ Die Login-Parameter stammen aus der DHL-App und sind inoffiziell – ändert DHL sie, muss die Anmeldung ggf. neu erfolgen oder die Funktion bricht.
 
 Idee und OAuth-Flow von [@SniperWCW](https://github.com/SniperWCW) ([#1](https://github.com/Jetiman/Versand-HA/pull/1)) – der PR wurde nicht 1:1 übernommen, sondern das Konzept auf aktuellem Stand neu umgesetzt.
 

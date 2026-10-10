@@ -43,11 +43,19 @@ from .const import (
     DOMAIN,
     MIN_UPDATE_INTERVAL_MINUTES,
     PROVIDER_AMAZON,
+    PROVIDER_DHL_ACCOUNT,
     PROVIDER_DPD,
     PROVIDER_HERMES,
     PROVIDER_NUMBERS,
 )
-from .dhl_account import DhlAccountClient, DhlAuthError, build_login, extract_code
+from .dhl_account import (
+    DhlAccountClient,
+    DhlAuthError,
+    DhlConnectionError,
+    account_label,
+    build_login,
+    extract_code,
+)
 from .dpd_api import DpdApiClient, DpdApiError, DpdAuthError
 from .hermes_account import HermesAccountClient, HermesAccountError, HermesAuthError
 
@@ -126,10 +134,17 @@ _AMAZON_OTP_SCHEMA = vol.Schema(
 )
 
 
+def _dhl_error_key(err: DhlAuthError) -> str:
+    return "dhl_connect" if isinstance(err, DhlConnectionError) else "dhl_auth"
+
+
 class PaketverfolgungConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Paketverfolgung."""
 
     VERSION = 1
+
+    _verifier: str | None = None
+    _reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -141,6 +156,8 @@ class PaketverfolgungConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_amazon()
             if user_input[CONF_PROVIDER] == PROVIDER_HERMES:
                 return await self.async_step_hermes()
+            if user_input[CONF_PROVIDER] == PROVIDER_DHL_ACCOUNT:
+                return await self.async_step_dhl_account()
             return await self.async_step_dhl()
 
         return self.async_show_form(
@@ -153,6 +170,7 @@ class PaketverfolgungConfigFlow(ConfigFlow, domain=DOMAIN):
                         selector.SelectSelectorConfig(
                             options=[
                                 PROVIDER_NUMBERS,
+                                PROVIDER_DHL_ACCOUNT,
                                 PROVIDER_DPD,
                                 PROVIDER_AMAZON,
                                 PROVIDER_HERMES,
@@ -254,6 +272,91 @@ class PaketverfolgungConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="hermes", data_schema=_HERMES_LOGIN_SCHEMA, errors=errors
+        )
+
+    async def async_step_dhl_account(
+        self, user_input: dict[str, Any] | None = None
+    ) -> Any:
+        """Sign in to a DHL account (OAuth) - all its shipments are tracked.
+
+        Shows the DHL login URL; after signing in the user copies the
+        ``dhllogin://`` address that shows up in the browser console (F12)
+        and pastes it back. Its ``code`` is exchanged for a token pair that
+        is stored in the entry (no password).
+        """
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                session = await self._dhl_sign_in(user_input)
+            except DhlAuthError as err:
+                _LOGGER.debug("DHL account login failed: %s", err)
+                errors["base"] = _dhl_error_key(err)
+            else:
+                label = account_label(session.get("id_token"))
+                await self.async_set_unique_id(
+                    f"{PROVIDER_DHL_ACCOUNT}_{label.lower()}"
+                    if label
+                    else PROVIDER_DHL_ACCOUNT
+                )
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=f"DHL ({label})" if label else "DHL-Konto",
+                    data={
+                        CONF_PROVIDER: PROVIDER_DHL_ACCOUNT,
+                        CONF_DHL_SESSION: session,
+                    },
+                )
+
+        return self._dhl_login_form("dhl_account", errors)
+
+    async def async_step_reauth(self, entry_data: dict[str, Any]) -> Any:
+        """The DHL session was rejected - sign in again."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        if entry is None or entry.data.get(CONF_PROVIDER) != PROVIDER_DHL_ACCOUNT:
+            return self.async_abort(reason="reauth_unsupported")
+        self._reauth_entry = entry
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> Any:
+        errors: dict[str, str] = {}
+        entry = self._reauth_entry
+        if entry is None:
+            return self.async_abort(reason="reauth_unsupported")
+        if user_input is not None:
+            try:
+                session = await self._dhl_sign_in(user_input)
+            except DhlAuthError as err:
+                _LOGGER.debug("DHL re-login failed: %s", err)
+                errors["base"] = _dhl_error_key(err)
+            else:
+                self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_DHL_SESSION: session}
+                )
+                await self.hass.config_entries.async_reload(entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        return self._dhl_login_form("reauth_confirm", errors)
+
+    async def _dhl_sign_in(self, user_input: dict[str, Any]) -> dict[str, Any]:
+        """Redeem the pasted ``dhllogin://`` address for a verified session."""
+        code = extract_code(user_input.get(CONF_DHL_REDIRECT) or "")
+        client = DhlAccountClient(async_get_clientsession(self.hass))
+        session = await client.exchange_code(code, self._verifier or "")
+        # Make sure the new session can actually list shipments.
+        await client.fetch_shipment_ids(session)
+        return session
+
+    def _dhl_login_form(self, step_id: str, errors: dict[str, str]) -> Any:
+        self._verifier, login_url = build_login()
+        return self.async_show_form(
+            step_id=step_id,
+            data_schema=vol.Schema(
+                {vol.Required(CONF_DHL_REDIRECT): selector.TextSelector()}
+            ),
+            errors=errors,
+            description_placeholders={"login_url": login_url},
         )
 
     async def async_step_amazon(
@@ -359,6 +462,8 @@ class PaketverfolgungOptionsFlow(OptionsFlow):
             return await self.async_step_amazon_options(user_input)
         if provider == PROVIDER_HERMES:
             return await self.async_step_hermes_options(user_input)
+        if provider == PROVIDER_DHL_ACCOUNT:
+            return await self.async_step_dhl_account_options(user_input)
         return await self.async_step_dhl_options(user_input)
 
     def _current(self, key, default=None):
@@ -538,6 +643,25 @@ class PaketverfolgungOptionsFlow(OptionsFlow):
             )
         return self.async_show_form(
             step_id="hermes_options",
+            data_schema=_update_interval_schema(
+                self._current(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL_MINUTES)
+            ),
+        )
+
+    async def async_step_dhl_account_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> Any:
+        """The DHL account only exposes the refresh interval."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title="",
+                data={
+                    **self._entry.options,
+                    CONF_UPDATE_INTERVAL: user_input[CONF_UPDATE_INTERVAL],
+                },
+            )
+        return self.async_show_form(
+            step_id="dhl_account_options",
             data_schema=_update_interval_schema(
                 self._current(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL_MINUTES)
             ),
