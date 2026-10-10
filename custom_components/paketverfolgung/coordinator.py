@@ -81,6 +81,7 @@ from .dhl_api import DhlApiClient, DhlApiError
 from .dpd_api import DpdApiClient, DpdApiError, DpdAuthError, DpdSession
 from .dpd_tracking_api import DpdTrackingApiClient, DpdTrackingApiError
 from .hermes_tracking_api import HermesTrackingApiClient, HermesTrackingApiError
+from .tracking_util import is_return
 from .ups_tracking_api import UpsBudget, UpsTrackingApiClient, UpsTrackingApiError
 
 _LOGGER = logging.getLogger(__name__)
@@ -384,7 +385,7 @@ class _BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         targets = self._notify_targets()
         old = self.data or {}
         for sid, item in new.items():
-            if item.get("archived"):
+            if item.get("archived") or is_return(item):
                 continue
             prev = old.get(sid)
             status = item.get("status") or ""

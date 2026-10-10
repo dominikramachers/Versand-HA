@@ -499,6 +499,16 @@ class PaketverfolgungOptionsFlow(OptionsFlow):
             }
             if self._pending[CONF_DHL_AUTO_DISCOVERY]:
                 return await self.async_step_dhl_login()
+            if CONF_DHL_SESSION in self._entry.data:
+                # Switched off: do not keep the old DHL sign-in lying around.
+                self.hass.config_entries.async_update_entry(
+                    self._entry,
+                    data={
+                        k: v
+                        for k, v in self._entry.data.items()
+                        if k != CONF_DHL_SESSION
+                    },
+                )
             return self.async_create_entry(title="", data=self._pending)
 
         schema = (

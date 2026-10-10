@@ -53,6 +53,8 @@ Meldet sich mit deinem **myDPD-Konto** an (SOAP-API der offiziellen DPD-App „P
 
 Das Passwort wird nur lokal in Home Assistant gespeichert (wie bei jeder anderen Cloud-Integration).
 
+> ℹ️ **Retouren** (DPD-Rücksendungen sowie Sendungen, deren Status „Rücksendung“/„Retoure“ nennt) zählen nicht bei **„In Zustellung“** mit und lösen keine Benachrichtigungen aus. Sie bleiben als Sensor und im Panel sichtbar.
+
 ## DHL-Konto (optional)
 
 „Eintrag hinzufügen“ → **„DHL-Konto“**. Danach erscheinen alle **nicht archivierten Sendungen deines DHL-Kontos** automatisch als Sensoren (Verlauf, Zustellfenster usw. wie bei einer eingetragenen DHL-Nummer). Ein Eintrag pro Konto, Aktualisierungsintervall in den Optionen. Es wird **kein Passwort** gespeichert, nur die OAuth-Sitzung von DHL; sie wird selbstständig erneuert.

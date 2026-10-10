@@ -384,3 +384,43 @@ def test_dhl_hiccup_on_first_poll_is_retried_later():
     )
     with pytest.raises(_UpdateFailed):
         run(coord._merge_dhl_account_numbers([]))
+
+
+# --- returns ("Retouren") are ignored ---------------------------------------
+tracking_util = importlib.import_module(f"{PKG}.tracking_util")
+
+
+@pytest.mark.parametrize(
+    "item, expected",
+    [
+        ({"direction": "return", "status": "Unterwegs"}, True),  # DPD account
+        ({"direction": "RETURN", "status": ""}, True),
+        ({"direction": "receive", "status": "Rücksendung an den Absender"}, True),
+        ({"status": "Retoure wurde abgeholt"}, True),
+        ({"status": "Ruecksendung eingeleitet"}, True),
+        ({"direction": "receive", "status": "In Zustellung"}, False),
+        ({"direction": "send", "status": "Zugestellt"}, False),
+        ({"status": None, "direction": None}, False),
+        (None, False),
+    ],
+)
+def test_is_return(item, expected):
+    assert tracking_util.is_return(item) is expected
+
+
+def test_returns_do_not_trigger_notifications():
+    coord = make_coordinator(FakeAccount(), SESSION)
+    coord.entry.options = {"notify_enabled": True}
+    coord._notify_primed = True
+    coord._notify_targets = lambda: ["mobile_app_x"]
+    pushed = []
+    coord._push_notification = lambda targets, action, item, prev: pushed.append(item["id"])
+    coord.data = {}
+    coord._notify_changes(
+        {
+            "R1": {"id": "R1", "status": "Rücksendung unterwegs", "group": "transit"},
+            "R2": {"id": "R2", "status": "Unterwegs", "group": "transit", "direction": "return"},
+            "P1": {"id": "P1", "status": "Unterwegs", "group": "transit", "direction": "receive"},
+        }
+    )
+    assert pushed == ["P1"]
